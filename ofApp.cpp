@@ -1,8 +1,8 @@
 #include "ofApp.h"
 
-#include <vector>
-
-#include <iostream>
+#define MINIMUM -8
+#define MAXIMUM 8
+#define DIMENSION 2
 
 // Fitness function
 double ofApp::function(double * coords, unsigned int dim)
@@ -23,7 +23,6 @@ double ofApp::function(double * coords, unsigned int dim)
 	return result;
 }
 
-//--------------------------------------------------------------
 void ofApp::setup()
 {
 	ofEnableDepthTest();
@@ -34,6 +33,10 @@ void ofApp::setup()
 	const int perUnit = 5;
 	// square root of the number of vertices
 	const int checks = perUnit * size;
+	//size of spheres **bacteria
+	const float width = 0.5f;
+	//random number generator
+	domain = std::uniform_real_distribution<double>(MINIMUM,MAXIMUM);
 
 	// Create Verticies
 	for(int z = 0; z < checks; ++z)
@@ -93,6 +96,21 @@ void ofApp::setup()
 		}
 	}
 
+	//create spheres
+	sphere.setRadius(width);
+
+
+	best.fitness = -9999;
+
+    /* Generate the initial population */
+    for (int i = 0; i < visual.POP_SIZE; i++)
+    {
+        visual.population.at(i).pos = visual.genRandSol(DIMENSION);
+        visual.population.at(i).fitness = 0.0;
+        visual.population.at(i).health = 0.0;
+    }
+
+
 	// Initialize the camera closer to our graph
 	cam.setTarget(glm::vec3(0.0f,-5.0f,0.0f));
 	cam.setDistance(20.0f);
@@ -115,6 +133,54 @@ void ofApp::draw(){
 	mesh.drawWireframe();
 	mesh.disableColors();
 
+	ofSetColor(255, 255, 0);
+
+	/* Elimination/Dispersal Events */
+    /* Swim about */
+	visual.chemotaxisAndSwim(	DIMENSION, 
+								visual.STEP_SIZE, 
+								visual.ELDISP_STEPS, 
+								visual.REPRO_STEPS, 
+								visual.CHEMO_STEPS, 
+								visual.SWIM_LEN, 
+								visual.ELIM_PROB, 
+								visual.ATTRACT_D, 
+								visual.ATTRACT_W, 
+								visual.REPEL_H, 
+								visual.REPEL_W);
+
+    /* Check for a new best */
+    for (cell_t cell : visual.population)
+		if (cell.fitness > best.fitness)
+            best = cell;
+
+	/* Randomly replace a cell at a new location */
+	const double MAXPROB = 1.0;
+	for (int cellNum = 0; cellNum < visual.population.size(); cellNum++)
+	{
+		double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
+		if (num < visual.ELIM_PROB)
+		{
+			visual.population.at(cellNum).pos = visual.genRandSol(DIMENSION);
+			visual.population.at(cellNum).health = 0.0;
+			visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
+		}
+	}
+
+	printf("Best: "); 
+	visual.printVector(best.pos); printf("\n");
+	printf("Fitness: %f\n", visual.evalFitness(best.pos));
+
+	/**TEST CODE FOR DRAWING SPHERES**/
+/*	double randX = domain(gen);
+	double randZ = domain(gen);
+	double random[] = {randX, randZ};
+	double randY = function(random, 2);
+
+	sphere.setPosition(randX, randY, randZ);
+
+    sphere.draw();
+*/
 	cam.end();
 }
 

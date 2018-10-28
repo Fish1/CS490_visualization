@@ -1,6 +1,11 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofNode.h"
+#include "bacteria.hpp"
+#include <vector>
+#include <random>
+#include <iostream>
 
 class ofApp : public ofBaseApp{
 
@@ -24,6 +29,11 @@ class ofApp : public ofBaseApp{
 	private:
 		ofEasyCam cam;
 		ofVboMesh mesh;
+		ofSpherePrimitive sphere;
+		bacteria visual;
+		cell_t best;
+		std::default_random_engine gen;
+		std::uniform_real_distribution<double> domain;
 
 	private:
 		double function(double * coords, unsigned int dim);
