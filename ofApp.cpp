@@ -1,10 +1,8 @@
 #include "ofApp.h"
 
-#define MINIMUM -8
-#define MAXIMUM 8
 #define DIMENSION 2
 
-unsigned frame_cnt=0;
+unsigned frame_cnt = 0;
 
 // Fitness function
 double ofApp::function(double * coords, unsigned int dim)
@@ -38,7 +36,7 @@ void ofApp::setup()
 	//size of spheres **bacteria
 	const float width = 0.5f;
 	//random number generator
-	domain = std::uniform_real_distribution<double>(MINIMUM,MAXIMUM);
+	domain = std::uniform_real_distribution<double>(visual.MIN_X, visual.MAX_X);
 
 	// Create Verticies
 	for(int z = 0; z < checks; ++z)
@@ -104,13 +102,6 @@ void ofApp::setup()
 
 	best.fitness = -9999;
 
-    /* Generate the initial population */
-    for (int i = 0; i < visual.POP_SIZE; i++)
-    {
-        visual.population.at(i).pos = visual.genRandSol(DIMENSION);
-        visual.population.at(i).fitness = 0.0;
-        visual.population.at(i).health = 0.0;
-    }
 
 
 	// Initialize the camera closer to our graph
@@ -119,12 +110,54 @@ void ofApp::setup()
 }
 
 //--------------------------------------------------------------
-void ofApp::update(){
-	/* Elimination/Dispersal Events */
+void ofApp::update()
+{
     /* Swim about */
+	visual.chemotaxisAndSwim(	DIMENSION, 
+								visual.STEP_SIZE, 
+								visual.ELDISP_STEPS, 
+								visual.REPRO_STEPS, 
+								visual.CHEMO_STEPS, 
+								visual.SWIM_LEN, 
+								visual.ELIM_PROB, 
+								visual.ATTRACT_D, 
+								visual.ATTRACT_W, 
+								visual.REPEL_H, 
+								visual.REPEL_W);
 
-    
+    /* Check for a new best */
+    for (cell_t cell : visual.population)
+	{
+		if (cell.fitness > best.fitness)
+		{
+            best = cell;
 
+			printf("Best: "); 
+			visual.printVector(best.pos); printf("\n");
+			printf("Fitness: %f\n", visual.evalFitness(best.pos));
+		}
+	}
+
+  	/* Randomly replace a cell at a new location */
+	if(frame_cnt%(visual.REPRO_STEPS*visual.CHEMO_STEPS)==0)
+	{
+		const float MAXPROB = 1.0;
+		for (int cellNum = 0; cellNum < visual.population.size(); cellNum++)
+		{
+			double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
+
+			if (num < visual.ELIM_PROB)
+			{
+				visual.population.at(cellNum).pos = visual.genRandSol(DIMENSION);
+				visual.population.at(cellNum).health = 0.0;
+				visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
+			}
+		}
+	}
+
+	/*Kills bacteria with low health*/
+	if(frame_cnt%visual.CHEMO_STEPS==0)
+		visual.eliminatePop();
 }
 
 //--------------------------------------------------------------
@@ -142,89 +175,45 @@ void ofApp::draw(){
 
 	ofSetColor(255, 255, 0);
 
-	if(frame_cnt%(visual.REPRO_STEPS*visual.CHEMO_STEPS)==0)
-	{
-		const float MAXPROB = 1.0;
-		for (int cellNum = 0; cellNum < visual.population.size(); cellNum++)
-		{
-			double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
-		
-
-			if (num < visual.ELIM_PROB)
-			{
-				visual.population.at(cellNum).pos = visual.genRandSol(DIMENSION);
-				visual.population.at(cellNum).health = 0.0;
-				visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
-			}
-		}
-	}
-
-	if(frame_cnt%visual.CHEMO_STEPS==0)
-		visual.eliminatePop();
-
 
 	for(int i=0;i<visual.population.size();i++)
     {
     	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], ofApp::function(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
     }
 
-
-	visual.chemotaxisAndSwim(	DIMENSION, 
-								visual.STEP_SIZE, 
-								visual.ELDISP_STEPS, 
-								visual.REPRO_STEPS, 
-								visual.CHEMO_STEPS, 
-								visual.SWIM_LEN, 
-								visual.ELIM_PROB, 
-								visual.ATTRACT_D, 
-								visual.ATTRACT_W, 
-								visual.REPEL_H, 
-								visual.REPEL_W);
-
-    /* Check for a new best */
-    for (cell_t cell : visual.population)
-		if (cell.fitness > best.fitness)
-            best = cell;
-
-	/* Randomly replace a cell at a new location */
-	/*const double MAXPROB = 1.0;
-	for (int cellNum = 0; cellNum < visual.population.size(); cellNum++)
-	{
-		double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
-		if (num < visual.ELIM_PROB)
-		{
-			visual.population.at(cellNum).pos = visual.genRandSol(DIMENSION);
-			visual.population.at(cellNum).health = 0.0;
-			visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
-		}
-	}*/
-
-	printf("Best: "); 
-	visual.printVector(best.pos); printf("\n");
-	printf("Fitness: %f\n", visual.evalFitness(best.pos));
-
-	/**TEST CODE FOR DRAWING SPHERES**/
-/*	double randX = domain(gen);
-	double randZ = domain(gen);
-	double random[] = {randX, randZ};
-	double randY = function(random, 2);
-
-	sphere.setPosition(randX, randY, randZ);
-
-    sphere.draw();
-*/
 	cam.end();
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 
+	if(key == 'z')
+	{
+		visual.POP_SIZE -= 1;
+		if(visual.POP_SIZE == 0)
+			visual.POP_SIZE = 1;
+
+		std::cout << "POP_SIZE = " << visual.POP_SIZE << std::endl;
+
+		visual.initializePopulation();
+	}
+		
+
+	if(key == 'x')
+	{
+		visual.POP_SIZE += 1;
+
+		std::cout << "POP_SIZE = " << visual.POP_SIZE << std::endl;
+		
+		visual.initializePopulation();
+	}
+
 	if(key == 'q')
 	{
 		visual.ATTRACT_D -= 0.01;
 
-		if(visual.ATTRACT_D < 0.0)
-			visual.ATTRACT_D = 0;
+		if(visual.ATTRACT_D < 0.01)
+			visual.ATTRACT_D = 0.01;
 
 		std::cout << "ATTRACT_D = " << visual.ATTRACT_D << std::endl;
 	}
@@ -240,8 +229,8 @@ void ofApp::keyPressed(int key){
 	{
 		visual.ATTRACT_W -= 0.01;
 
-		if(visual.ATTRACT_W < 0.0)
-			visual.ATTRACT_W = 0.0;
+		if(visual.ATTRACT_W < 0.01)
+			visual.ATTRACT_W = 0.01;
 		
 		std::cout << "ATTRACT_W = " << visual.ATTRACT_W << std::endl;
 	}
@@ -257,8 +246,8 @@ void ofApp::keyPressed(int key){
 	{
 		visual.REPEL_H -= 0.01;
 		
-		if(visual.REPEL_H < 0.0)
-			visual.REPEL_H = 0.0;
+		if(visual.REPEL_H < 0.01)
+			visual.REPEL_H = 0.01;
 
 		std::cout << "REPEL_H = " << visual.REPEL_H << std::endl;
 	}
@@ -274,9 +263,9 @@ void ofApp::keyPressed(int key){
 	{
 		visual.REPEL_W -= 0.01;
 
-		if(visual.REPEL_W < 0.0)
+		if(visual.REPEL_W < 0.01)
 		{
-			visual.REPEL_W = 0.0;
+			visual.REPEL_W = 0.01;
 		}
 
 		std::cout << "REPEL_W = " << visual.REPEL_W << std::endl;
