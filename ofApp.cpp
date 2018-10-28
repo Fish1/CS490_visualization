@@ -1,10 +1,8 @@
 #include "ofApp.h"
 
-#define MINIMUM -8
-#define MAXIMUM 8
 #define DIMENSION 2
 
-unsigned frame_cnt=0;
+unsigned frame_cnt = 0;
 
 // Fitness function
 double ofApp::function(double * coords, unsigned int dim)
@@ -38,7 +36,7 @@ void ofApp::setup()
 	//size of spheres **bacteria
 	const float width = 0.5f;
 	//random number generator
-	domain = std::uniform_real_distribution<double>(MINIMUM,MAXIMUM);
+	domain = std::uniform_real_distribution<double>(visual.MIN_X, visual.MAX_X);
 
 	// Create Verticies
 	for(int z = 0; z < checks; ++z)
@@ -119,56 +117,9 @@ void ofApp::setup()
 }
 
 //--------------------------------------------------------------
-void ofApp::update(){
-	/* Elimination/Dispersal Events */
+void ofApp::update()
+{
     /* Swim about */
-
-    
-
-}
-
-//--------------------------------------------------------------
-void ofApp::draw(){
-
-	frame_cnt++;
-	ofBackgroundGradient(ofColor(65,62,50), ofColor(25,22,10));	
-
-	cam.begin();
-
-	mesh.enableColors();
-	ofSetColor(255,255,255);
-	mesh.drawWireframe();
-	mesh.disableColors();
-
-	ofSetColor(255, 255, 0);
-
-	if(frame_cnt%(visual.REPRO_STEPS*visual.CHEMO_STEPS)==0)
-	{
-		const float MAXPROB = 1.0;
-		for (int cellNum = 0; cellNum < visual.population.size(); cellNum++)
-		{
-			double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
-		
-
-			if (num < visual.ELIM_PROB)
-			{
-				visual.population.at(cellNum).pos = visual.genRandSol(DIMENSION);
-				visual.population.at(cellNum).health = 0.0;
-				visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
-			}
-		}
-	}
-
-	if(frame_cnt%visual.CHEMO_STEPS==0)
-		visual.eliminatePop();
-
-
-	for(int i=0;i<visual.population.size();i++)
-    {
-    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], ofApp::function(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
-    }
-
-
 	visual.chemotaxisAndSwim(	DIMENSION, 
 								visual.STEP_SIZE, 
 								visual.ELDISP_STEPS, 
@@ -186,33 +137,55 @@ void ofApp::draw(){
 		if (cell.fitness > best.fitness)
             best = cell;
 
-	/* Randomly replace a cell at a new location */
-	/*const double MAXPROB = 1.0;
-	for (int cellNum = 0; cellNum < visual.population.size(); cellNum++)
+  	/* Randomly replace a cell at a new location */
+	if(frame_cnt%(visual.REPRO_STEPS*visual.CHEMO_STEPS)==0)
 	{
-		double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
-		if (num < visual.ELIM_PROB)
+		const float MAXPROB = 1.0;
+		for (int cellNum = 0; cellNum < visual.population.size(); cellNum++)
 		{
-			visual.population.at(cellNum).pos = visual.genRandSol(DIMENSION);
-			visual.population.at(cellNum).health = 0.0;
-			visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
+			double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
+
+			if (num < visual.ELIM_PROB)
+			{
+				visual.population.at(cellNum).pos = visual.genRandSol(DIMENSION);
+				visual.population.at(cellNum).health = 0.0;
+				visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
+			}
 		}
-	}*/
+	}
+
+	/*Kills bacteria with low health*/
+	if(frame_cnt%visual.CHEMO_STEPS==0)
+		visual.eliminatePop();
+}
+
+//--------------------------------------------------------------
+void ofApp::draw(){
+
+	frame_cnt++;
+	ofBackgroundGradient(ofColor(65,62,50), ofColor(25,22,10));	
+
+	cam.begin();
+
+	mesh.enableColors();
+	ofSetColor(255,255,255);
+	mesh.drawWireframe();
+	mesh.disableColors();
+
+	ofSetColor(255, 255, 0);
+
+
+	for(int i=0;i<visual.population.size();i++)
+    {
+    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], ofApp::function(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
+    }
+
+
 
 	printf("Best: "); 
 	visual.printVector(best.pos); printf("\n");
 	printf("Fitness: %f\n", visual.evalFitness(best.pos));
 
-	/**TEST CODE FOR DRAWING SPHERES**/
-/*	double randX = domain(gen);
-	double randZ = domain(gen);
-	double random[] = {randX, randZ};
-	double randY = function(random, 2);
-
-	sphere.setPosition(randX, randY, randZ);
-
-    sphere.draw();
-*/
 	cam.end();
 }
 

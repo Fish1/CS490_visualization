@@ -20,11 +20,11 @@ public:
     const int MIN_X = -8.0;
     const int MAX_X = 8.0;
     //Original cpp file values
-    const int    POP_SIZE = 20;       // population size - book uses 50
+    const int    POP_SIZE = 50;       // population size - book uses 50
     const double STEP_SIZE = 0.1;     // Same as book
     const int    ELDISP_STEPS = 5;    // elimination/dispersal events
-    const int    REPRO_STEPS = 4;     // reproduction steps
-    const int    CHEMO_STEPS = 350;    // chemotaxis/swim events - set as 7*ELDISP_STEPS
+    const int    REPRO_STEPS = 5;     // reproduction steps
+    const int    CHEMO_STEPS = 100;    // chemotaxis/swim events - set as 7*ELDISP_STEPS
     const int    SWIM_LEN = 4;        // how long to swim?
     const double ELIM_PROB = 0.25;    // Probability of elimination
     const double ATTRACT_D = 0.1;       // attraction coefficient
