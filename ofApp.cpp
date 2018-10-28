@@ -5,7 +5,7 @@
 #include <iostream>
 
 // Fitness function
-double ofApp::function(double * coords, unsigned int dim)
+/*double ofApp::function(double * coords, unsigned int dim)
 {
 	double sum1 = 0;
 
@@ -21,6 +21,34 @@ double ofApp::function(double * coords, unsigned int dim)
 	double result = (-1.0) * sqrt(sum1) + sin(sum2);
 
 	return result;
+}*/
+
+double ofApp::function(double * coords, unsigned int dim)
+{
+	double a = 0;
+	for(unsigned int d = 0; d < dim; ++d)
+	{
+		a += coords[d];
+	}
+	a = pow(abs(a), 1.0/1001.0);
+
+	double b = 0;
+	for(unsigned int d = 0; d < dim; ++d)
+	{
+		b += 5.6 * coords[d] * pow(2, d);
+	}
+	b = cos(b);
+
+	double c = 0;
+	for(unsigned int d = 0; d < dim; ++d)
+	{
+		c += coords[d] * pow(3, d);
+	}
+	c = sin(c);
+
+	double den = (a*b*c) + 1.4;
+
+	return 1 / den;
 }
 
 //--------------------------------------------------------------
@@ -100,7 +128,7 @@ void ofApp::setup()
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
+	bo.update();
 }
 
 //--------------------------------------------------------------
@@ -114,6 +142,14 @@ void ofApp::draw(){
 	ofSetColor(255,255,255);
 	mesh.drawWireframe();
 	mesh.disableColors();
+
+	std::vector<cell_t> & pop = bo.getPopulation();
+	ofSetColor(0,255,0,255);
+
+	for(cell_t & c : pop)
+	{
+		ofDrawSphere(c.pos[0], c.fitness + 0.25, c.pos[1], 0.25); 
+	}
 
 	cam.end();
 }

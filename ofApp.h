@@ -2,6 +2,8 @@
 
 #include "ofMain.h"
 
+#include "bacteria.h"
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -24,6 +26,8 @@ class ofApp : public ofBaseApp{
 	private:
 		ofEasyCam cam;
 		ofVboMesh mesh;
+
+		BacteriaOptimization bo;
 
 	private:
 		double function(double * coords, unsigned int dim);
