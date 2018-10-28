@@ -219,6 +219,75 @@ void ofApp::draw(){
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 
+	if(key == 'q')
+	{
+		visual.ATTRACT_D -= 0.01;
+
+		if(visual.ATTRACT_D < 0.0)
+			visual.ATTRACT_D = 0;
+
+		std::cout << "ATTRACT_D = " << visual.ATTRACT_D << std::endl;
+	}
+	
+	if(key == 'w')
+	{
+		visual.ATTRACT_D += 0.01;
+
+		std::cout << "ATTRACT_D = " << visual.ATTRACT_D << std::endl;
+	}
+
+	if(key == 'a')
+	{
+		visual.ATTRACT_W -= 0.01;
+
+		if(visual.ATTRACT_W < 0.0)
+			visual.ATTRACT_W = 0.0;
+		
+		std::cout << "ATTRACT_W = " << visual.ATTRACT_W << std::endl;
+	}
+	
+	if(key == 's')
+	{
+		visual.ATTRACT_W += 0.01;
+		
+		std::cout << "ATTRACT_W = " << visual.ATTRACT_W << std::endl;
+	}
+
+	if(key == 'e')
+	{
+		visual.REPEL_H -= 0.01;
+		
+		if(visual.REPEL_H < 0.0)
+			visual.REPEL_H = 0.0;
+
+		std::cout << "REPEL_H = " << visual.REPEL_H << std::endl;
+	}
+
+	if(key == 'r')
+	{
+		visual.REPEL_H += 0.01;
+	
+		std::cout << "REPEL_H = " << visual.REPEL_H << std::endl;
+	}
+
+	if(key == 'd')
+	{
+		visual.REPEL_W -= 0.01;
+
+		if(visual.REPEL_W < 0.0)
+		{
+			visual.REPEL_W = 0.0;
+		}
+
+		std::cout << "REPEL_W = " << visual.REPEL_W << std::endl;
+	}
+
+	if(key == 'f')
+	{
+		visual.REPEL_W += 0.01;
+
+		std::cout << "REPEL_W = " << visual.REPEL_W << std::endl;
+	}
 }
 
 //--------------------------------------------------------------
