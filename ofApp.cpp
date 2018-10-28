@@ -102,13 +102,6 @@ void ofApp::setup()
 
 	best.fitness = -9999;
 
-    /* Generate the initial population */
-    for (int i = 0; i < visual.POP_SIZE; i++)
-    {
-        visual.population.at(i).pos = visual.genRandSol(DIMENSION);
-        visual.population.at(i).fitness = 0.0;
-        visual.population.at(i).health = 0.0;
-    }
 
 
 	// Initialize the camera closer to our graph
@@ -135,8 +128,16 @@ void ofApp::update()
 
     /* Check for a new best */
     for (cell_t cell : visual.population)
+	{
 		if (cell.fitness > best.fitness)
+		{
             best = cell;
+
+			printf("Best: "); 
+			visual.printVector(best.pos); printf("\n");
+			printf("Fitness: %f\n", visual.evalFitness(best.pos));
+		}
+	}
 
   	/* Randomly replace a cell at a new location */
 	if(frame_cnt%(visual.REPRO_STEPS*visual.CHEMO_STEPS)==0)
@@ -201,18 +202,102 @@ void ofApp::draw(){
     				);
     }
 
-
-
-	printf("Best: "); 
-	visual.printVector(best.pos); printf("\n");
-	printf("Fitness: %f\n", visual.evalFitness(best.pos));
-
 	cam.end();
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 
+	if(key == 'z')
+	{
+		visual.POP_SIZE -= 1;
+		if(visual.POP_SIZE == 0)
+			visual.POP_SIZE = 1;
+
+		std::cout << "POP_SIZE = " << visual.POP_SIZE << std::endl;
+
+		visual.initializePopulation();
+	}
+		
+
+	if(key == 'x')
+	{
+		visual.POP_SIZE += 1;
+
+		std::cout << "POP_SIZE = " << visual.POP_SIZE << std::endl;
+		
+		visual.initializePopulation();
+	}
+
+	if(key == 'q')
+	{
+		visual.ATTRACT_D -= 0.01;
+
+		if(visual.ATTRACT_D < 0.01)
+			visual.ATTRACT_D = 0.01;
+
+		std::cout << "ATTRACT_D = " << visual.ATTRACT_D << std::endl;
+	}
+	
+	if(key == 'w')
+	{
+		visual.ATTRACT_D += 0.01;
+
+		std::cout << "ATTRACT_D = " << visual.ATTRACT_D << std::endl;
+	}
+
+	if(key == 'a')
+	{
+		visual.ATTRACT_W -= 0.01;
+
+		if(visual.ATTRACT_W < 0.01)
+			visual.ATTRACT_W = 0.01;
+		
+		std::cout << "ATTRACT_W = " << visual.ATTRACT_W << std::endl;
+	}
+	
+	if(key == 's')
+	{
+		visual.ATTRACT_W += 0.01;
+		
+		std::cout << "ATTRACT_W = " << visual.ATTRACT_W << std::endl;
+	}
+
+	if(key == 'e')
+	{
+		visual.REPEL_H -= 0.01;
+		
+		if(visual.REPEL_H < 0.01)
+			visual.REPEL_H = 0.01;
+
+		std::cout << "REPEL_H = " << visual.REPEL_H << std::endl;
+	}
+
+	if(key == 'r')
+	{
+		visual.REPEL_H += 0.01;
+	
+		std::cout << "REPEL_H = " << visual.REPEL_H << std::endl;
+	}
+
+	if(key == 'd')
+	{
+		visual.REPEL_W -= 0.01;
+
+		if(visual.REPEL_W < 0.01)
+		{
+			visual.REPEL_W = 0.01;
+		}
+
+		std::cout << "REPEL_W = " << visual.REPEL_W << std::endl;
+	}
+
+	if(key == 'f')
+	{
+		visual.REPEL_W += 0.01;
+
+		std::cout << "REPEL_W = " << visual.REPEL_W << std::endl;
+	}
 }
 
 //--------------------------------------------------------------

@@ -17,23 +17,48 @@ class cell_t
 class bacteria
 {
 public:
-    const int MIN_X = -8.0;
-    const int MAX_X = 8.0;
+    int MIN_X = -8.0;
+    int MAX_X = 8.0;
     //Original cpp file values
-    const int    POP_SIZE = 50;       // population size - book uses 50
-    const double STEP_SIZE = 0.1;     // Same as book
-    const int    ELDISP_STEPS = 5;    // elimination/dispersal events
-    const int    REPRO_STEPS = 5;     // reproduction steps
-    const int    CHEMO_STEPS = 100;    // chemotaxis/swim events - set as 7*ELDISP_STEPS
-    const int    SWIM_LEN = 4;        // how long to swim?
-    const double ELIM_PROB = 0.25;    // Probability of elimination
-    const double ATTRACT_D = 0.1;       // attraction coefficient
-    const double ATTRACT_W = 0.2;     // attraction weight?
-    const double REPEL_H = 0.1;       // repel coefficient
-    const double REPEL_W = 10.0;      // repel weight
+    int    POP_SIZE = 20;       // population size - book uses 50
+    double STEP_SIZE = 0.1;     // Same as book
+    int    ELDISP_STEPS = 5;    // elimination/dispersal events
+    int    REPRO_STEPS = 4;     // reproduction steps
+    int    CHEMO_STEPS = 350;    // chemotaxis/swim events - set as 7*ELDISP_STEPS
+    int    SWIM_LEN = 4;        // how long to swim?
+    double ELIM_PROB = 0.25;    // Probability of elimination
+    double ATTRACT_D = 0.1;       // attraction coefficient
+    double ATTRACT_W = 0.2;     // attraction weight?
+    double REPEL_H = 0.1;       // repel coefficient
+    double REPEL_W = 10.0;      // repel weight
     std::vector<cell_t>  population;
 
-    bacteria():population(POP_SIZE) {};
+	const int DIMENSION;
+
+	bacteria() :
+		DIMENSION(2)
+	{
+		initializePopulation();	
+	}
+
+    bacteria(int dim) : 
+		DIMENSION(dim)
+	{
+		initializePopulation();	
+	}
+
+	void initializePopulation()
+	{
+			population = std::vector<cell_t>(POP_SIZE);
+
+			/* Generate the initial population */
+			for (int i = 0; i < POP_SIZE; i++)
+			{
+				population.at(i).pos = genRandSol(DIMENSION);
+				population.at(i).fitness = 0.0;
+				population.at(i).health = 0.0;
+			}
+	}
 
     /* The cell interaction equation `g()` as described by the
      * clever algorithms textbook */
@@ -57,9 +82,7 @@ public:
 
         return sumAttract + sumRepel;
     }
-
-    
-
+	
     double evalFitness(std::vector<double> v)
     {
         double sr = 0.0; // square root
@@ -240,92 +263,4 @@ public:
             population.at(i + (population.size()/2)) = population.at(i);
         }
     }
-
-    /* n is the number of dimensions */
-    /* https://gist.github.com/x0xMaximus/8626921 */
-    void bacterialOptimization(int n)
-    {
-        //std::vector<cell_t> population(POP_SIZE);
-
-        cell_t best; // best cell;
-        best.fitness = -9999;
-
-        /* Generate the initial population */
-        //printf("Initial pop:\n");
-        for (int i = 0; i < POP_SIZE; i++)
-        {
-            population.at(i).pos = genRandSol(n);
-            population.at(i).fitness = 0.0;
-            population.at(i).health = 0.0;
-        //    printVector(population.at(i).pos);
-        //    printf("\n");
-        }
-        //printf("\n");
-
-        /* Elimination/Dispersal Events */
-        for (int l = 0; l < ELDISP_STEPS; l++)
-        {
-            for (int k = 0; k < REPRO_STEPS; k++)
-            {
-                for (int j = 0; j < CHEMO_STEPS; j++)
-                {
-                    /* Swim about */
-                    chemotaxisAndSwim(n, STEP_SIZE, ELDISP_STEPS, REPRO_STEPS,
-                        CHEMO_STEPS, SWIM_LEN, ELIM_PROB, ATTRACT_D, ATTRACT_W, REPEL_H,
-                        REPEL_W);
-
-                    /* Check for a new best */
-                    for (cell_t cell : population)
-                    {
-                        /* -9999 for the initial cell */
-                        //if (best.fitness == -9999 || cell.fitness >= best.fitness)
-                        if (cell.fitness > best.fitness)
-                        {
-                            best = cell;
-                            //printf("New Best: "); printVector(best.pos); printf("\n");
-                            //printf("Fitness: %f\n", evalFitness(best.pos));
-                        }
-                    }
-                } // end CHEMO_STEPS
-
-                // elimination step
-                eliminatePop();
-            } // end REPRO_STEPS
-
-            /* Randomly replace a cell at a new location */
-            const double MAXPROB = 1.0;
-            for (int cellNum = 0; cellNum < population.size(); cellNum++)
-            {
-                double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
-                if (num < ELIM_PROB) {
-                    population.at(cellNum).pos = genRandSol(n);
-                    population.at(cellNum).health = 0.0;
-                    population.at(cellNum).fitness = evalFitness(population.at(cellNum).pos);
-                }
-            }
-        } // end ELDISP steps
-
-        
-
-        printf("Best: "); printVector(best.pos); printf("\n");
-        printf("Fitness: %f\n", evalFitness(best.pos));
-    }
-/*
-    int function(int argc, char *argv[])
-    {
-        srand(time(0));
-
-    	std::vector<int> dims = {1, 2, 3, 5, 8, 13};
-    	
-    	for(int x : dims)
-    	{
-    		printf("N = %d\n--------------\n", x);
-    		bacterialOptimization(x);
-    		printf("\n");
-    	}
-    	
-        
-
-        return 0;
-    }*/
 };
