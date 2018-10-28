@@ -4,6 +4,8 @@
 #define MAXIMUM 8
 #define DIMENSION 2
 
+unsigned frame_cnt=0;
+
 // Fitness function
 double ofApp::function(double * coords, unsigned int dim)
 {
@@ -118,12 +120,17 @@ void ofApp::setup()
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	/* Elimination/Dispersal Events */
+    /* Swim about */
+
+    
 
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
 
+	frame_cnt++;
 	ofBackgroundGradient(ofColor(65,62,50), ofColor(25,22,10));	
 
 	cam.begin();
@@ -135,8 +142,33 @@ void ofApp::draw(){
 
 	ofSetColor(255, 255, 0);
 
-	/* Elimination/Dispersal Events */
-    /* Swim about */
+	if(frame_cnt%(visual.REPRO_STEPS*visual.CHEMO_STEPS)==0)
+	{
+		const float MAXPROB = 1.0;
+		for (int cellNum = 0; cellNum < visual.population.size(); cellNum++)
+		{
+			double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
+		
+
+			if (num < visual.ELIM_PROB)
+			{
+				visual.population.at(cellNum).pos = visual.genRandSol(DIMENSION);
+				visual.population.at(cellNum).health = 0.0;
+				visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
+			}
+		}
+	}
+
+	if(frame_cnt%visual.CHEMO_STEPS==0)
+		visual.eliminatePop();
+
+
+	for(int i=0;i<visual.population.size();i++)
+    {
+    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], ofApp::function(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
+    }
+
+
 	visual.chemotaxisAndSwim(	DIMENSION, 
 								visual.STEP_SIZE, 
 								visual.ELDISP_STEPS, 
@@ -155,7 +187,7 @@ void ofApp::draw(){
             best = cell;
 
 	/* Randomly replace a cell at a new location */
-	const double MAXPROB = 1.0;
+	/*const double MAXPROB = 1.0;
 	for (int cellNum = 0; cellNum < visual.population.size(); cellNum++)
 	{
 		double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
@@ -165,7 +197,7 @@ void ofApp::draw(){
 			visual.population.at(cellNum).health = 0.0;
 			visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
 		}
-	}
+	}*/
 
 	printf("Best: "); 
 	visual.printVector(best.pos); printf("\n");
