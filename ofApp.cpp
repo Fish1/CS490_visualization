@@ -114,6 +114,7 @@ void ofApp::setup()
 	// Initialize the camera closer to our graph
 	cam.setTarget(glm::vec3(0.0f,-5.0f,0.0f));
 	cam.setDistance(20.0f);
+	//ofSetColor(255,255,0);
 }
 
 //--------------------------------------------------------------
@@ -152,6 +153,8 @@ void ofApp::update()
 				visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
 			}
 		}
+
+
 	}
 
 	/*Kills bacteria with low health*/
@@ -161,6 +164,10 @@ void ofApp::update()
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+
+	static int red = 255;
+	static int blue = 255;
+	static int green = 255;
 
 	frame_cnt++;
 	ofBackgroundGradient(ofColor(65,62,50), ofColor(25,22,10));	
@@ -172,12 +179,26 @@ void ofApp::draw(){
 	mesh.drawWireframe();
 	mesh.disableColors();
 
-	ofSetColor(255, 255, 0);
+	//ofSetColor(255, 255, 0);
+	if(frame_cnt%(visual.REPRO_STEPS*visual.CHEMO_STEPS)==0||frame_cnt==1)
+	{
+		re_roll:
+		red = rand()%255;
+		blue = rand()%255;
+		green = rand()%255;
+		if(red<10 && blue<10 && green<10)
+			goto re_roll;
+	}
+
+	ofSetColor(red, green, blue);
 
 
 	for(int i=0;i<visual.population.size();i++)
     {
-    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], ofApp::function(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
+    	ofDrawSphere(	glm::vec3(visual.population.at(i).pos[0],
+    					ofApp::function(&visual.population.at(i).pos[0], DIMENSION),
+    					visual.population.at(i).pos[1]), 0.2
+    				);
     }
 
 
