@@ -6,6 +6,10 @@
 #include <random>
 #include <algorithm>
 
+#ifndef DIMENSION
+#define DIMENSION 2
+#endif
+
 class cell_t
     {
     public:
@@ -60,6 +64,7 @@ public:
 
     
 
+#if 0
     double evalFitness(std::vector<double> v)
     {
         double sr = 0.0; // square root
@@ -98,6 +103,8 @@ public:
         // final value is sqrt(sum1) + sin(sum2)
         return sr + sin(sn);
     }
+#endif
+	std::function<double(double *, unsigned int)> evalFitness;
 
     void printVector(std::vector<double> v)
     {
@@ -172,7 +179,7 @@ public:
             //printf("cell num %d\n", cellNum);
 
             // calculate the current cell's fitness
-            population.at(cellNum).fitness = evalFitness(population.at(cellNum).pos) + cellInteraction(population.at(cellNum), ATTRACT_D, ATTRACT_W, REPEL_H, REPEL_W);
+            population.at(cellNum).fitness = evalFitness(&population.at(cellNum).pos[0], DIMENSION) + cellInteraction(population.at(cellNum), ATTRACT_D, ATTRACT_W, REPEL_H, REPEL_W);
 
             for (int stepNum = 0; stepNum < CHEMO_STEPS; stepNum++)
             {
@@ -197,7 +204,7 @@ public:
 
                 }
 
-                tempCell.fitness = evalFitness(tempCell.pos) + cellInteraction(tempCell, ATTRACT_D, ATTRACT_W, REPEL_H, REPEL_W);
+                tempCell.fitness = evalFitness(&tempCell.pos[0], DIMENSION) + cellInteraction(tempCell, ATTRACT_D, ATTRACT_W, REPEL_H, REPEL_W);
                 /* Exit if we didn't find a better solution? 
                  * because we're MAXIMIZING a problem less is worse*/
                 //if (tempCell.fitness > population.at(cellNum).fitness) {
@@ -300,7 +307,7 @@ public:
                 if (num < ELIM_PROB) {
                     population.at(cellNum).pos = genRandSol(n);
                     population.at(cellNum).health = 0.0;
-                    population.at(cellNum).fitness = evalFitness(population.at(cellNum).pos);
+                    population.at(cellNum).fitness = evalFitness(&population.at(cellNum).pos[0], DIMENSION);
                 }
             }
         } // end ELDISP steps
@@ -308,7 +315,7 @@ public:
         
 
         printf("Best: "); printVector(best.pos); printf("\n");
-        printf("Fitness: %f\n", evalFitness(best.pos));
+        printf("Fitness: %f\n", evalFitness(&best.pos[0], DIMENSION));
     }
 /*
     int function(int argc, char *argv[])

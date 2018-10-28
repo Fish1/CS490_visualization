@@ -7,6 +7,9 @@
 #include <random>
 #include <iostream>
 
+// function pointer to an evaluation function
+//typedef double (ofApp:: eval_func_t)(double *, unsigned int);
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -36,5 +39,10 @@ class ofApp : public ofBaseApp{
 		std::uniform_real_distribution<double> domain;
 
 	private:
-		double function(double * coords, unsigned int dim);
+		static double function(double * coords, unsigned int dim);
+		static double function2(double * coords, unsigned int dim);
+		
+		const static unsigned int numFitnessFuncs = 2;
+		std::function<double(double *, unsigned int)> fitnessFuncs[numFitnessFuncs];
+		unsigned int fitnessFuncIndex = 0;
 };

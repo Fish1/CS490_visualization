@@ -2,7 +2,10 @@
 
 #define MINIMUM -8
 #define MAXIMUM 8
+
+#ifndef DIMENSION
 #define DIMENSION 2
+#endif
 
 unsigned frame_cnt=0;
 
@@ -25,6 +28,21 @@ double ofApp::function(double * coords, unsigned int dim)
 	return result;
 }
 
+// other test fitness function
+// this function expects dim to be 2 anyways...
+// townsend function:
+// https://en.wikipedia.org/wiki/Test_functions_for_optimization
+double ofApp::function2(double * coords, unsigned int dim)
+{
+	double x = coords[0];
+	double y = coords[1];
+	double cosVal = -1.0 * pow(cos((x - 0.1)*y), 2.0);
+	
+	double sinVal = x*sin(3*x+y);
+	
+	return cosVal - sinVal;
+}
+
 void ofApp::setup()
 {
 	ofEnableDepthTest();
@@ -39,6 +57,14 @@ void ofApp::setup()
 	const float width = 0.5f;
 	//random number generator
 	domain = std::uniform_real_distribution<double>(MINIMUM,MAXIMUM);
+
+	// set our current fitness function pointer and array of funcs
+	fitnessFuncs[0] = function;
+	fitnessFuncs[1] = function2;
+	fitnessFuncIndex = 1;
+	
+	// set the fitness function in the bacteria instance
+	visual.evalFitness = fitnessFuncs[fitnessFuncIndex];
 
 	// Create Verticies
 	for(int z = 0; z < checks; ++z)
@@ -55,7 +81,8 @@ void ofApp::setup()
 			double coord [] = {currentX, currentZ};
 
 			// the y position of the current vertex
-			double currentY = function(coord, 2);
+			//double currentY = function(coord, 2);
+			double currentY = fitnessFuncs[fitnessFuncIndex](coord, 2);
 			
 			ofVec3f point(currentX, currentY, currentZ);
 			mesh.addVertex(point);
@@ -154,7 +181,7 @@ void ofApp::draw(){
 			{
 				visual.population.at(cellNum).pos = visual.genRandSol(DIMENSION);
 				visual.population.at(cellNum).health = 0.0;
-				visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
+				visual.population.at(cellNum).fitness = visual.evalFitness(&visual.population.at(cellNum).pos[0], DIMENSION);
 			}
 		}
 	}
@@ -165,7 +192,7 @@ void ofApp::draw(){
 
 	for(int i=0;i<visual.population.size();i++)
     {
-    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], ofApp::function(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
+    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], fitnessFuncs[fitnessFuncIndex](&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
     }
 
 
@@ -201,7 +228,7 @@ void ofApp::draw(){
 
 	printf("Best: "); 
 	visual.printVector(best.pos); printf("\n");
-	printf("Fitness: %f\n", visual.evalFitness(best.pos));
+	printf("Fitness: %f\n", visual.evalFitness(&best.pos[0], DIMENSION));
 
 	/**TEST CODE FOR DRAWING SPHERES**/
 /*	double randX = domain(gen);
