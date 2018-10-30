@@ -6,6 +6,10 @@
 #include <random>
 #include <algorithm>
 
+//#ifndef DIMENSION
+//#define DIMENSION 2
+//#endif
+
 class cell_t
     {
     public:
@@ -82,45 +86,9 @@ public:
 
         return sumAttract + sumRepel;
     }
-	
-    double evalFitness(std::vector<double> v)
-    {
-        double sr = 0.0; // square root
-        double sn = 0.0; // sin
-        for (int i = 0; i < v.size(); i++)
-        {
-            /*****************************************/
-            /**             Square Root             **/
-            /*****************************************/
-            // x sub i
-            double a = v.at(i);
+    
 
-            // (-1)^i (i % 4)
-            // i+1 because formula states from i=1..N,
-            // here i starts at 0
-            a += pow(-1, i+1) * ((i+1) % 4);
-
-            // sum to our current total, squared
-            sr += pow(a, 2);
-
-            /*****************************************/
-            /**                 Sin                 **/
-            /*****************************************/
-            // x sub i
-            a = v.at(i);
-
-            // add to running total (x sub i) ^ i
-            sn += pow(a, i+1);
-        }
-
-        // square root
-        sr = sqrt(sr);
-        // the square root is negated
-        sr *= -1.0;
-
-        // final value is sqrt(sum1) + sin(sum2)
-        return sr + sin(sn);
-    }
+	std::function<double(double *, unsigned int)> evalFitness;
 
     void printVector(std::vector<double> v)
     {
@@ -172,16 +140,17 @@ public:
 
     void chemotaxisAndSwim(
         int n,
-        const double STEP_SIZE,     // Same as book
-        const int    ELDISP_STEPS,    // elimination/dispersal events
-        const int    REPRO_STEPS,     // reproduction steps
-        const int    CHEMO_STEPS,    // chemotaxis/swim events
-        const int    SWIM_LEN,        // how long to swim?
+        const double STEP_SIZE,    // Same as book
+        const int    ELDISP_STEPS, // elimination/dispersal events
+        const int    REPRO_STEPS,  // reproduction steps
+        const int    CHEMO_STEPS,  // chemotaxis/swim events
+        const int    SWIM_LEN,     // how long to swim?
         const double ELIM_PROB,    // Probability of elimination
-        const double ATTRACT_D,       // attraction coefficient
-        const double ATTRACT_W,     // attraction weight?
-        const double REPEL_H,       // repel coefficient
-        const double REPEL_W      // repel weight 
+        const double ATTRACT_D,    // attraction coefficient
+        const double ATTRACT_W,    // attraction weight?
+        const double REPEL_H,      // repel coefficient
+        const double REPEL_W,      // repel weight 
+        const bool   isMin         // whether or not we're trying to minimize the function
     )
     {
         //printf("Population size: %d\n", population.size());
@@ -195,7 +164,7 @@ public:
             //printf("cell num %d\n", cellNum);
 
             // calculate the current cell's fitness
-            population.at(cellNum).fitness = evalFitness(population.at(cellNum).pos) + cellInteraction(population.at(cellNum), ATTRACT_D, ATTRACT_W, REPEL_H, REPEL_W);
+            population.at(cellNum).fitness = evalFitness(&population.at(cellNum).pos[0], DIMENSION) + cellInteraction(population.at(cellNum), ATTRACT_D, ATTRACT_W, REPEL_H, REPEL_W);
 
             for (int stepNum = 0; stepNum < CHEMO_STEPS; stepNum++)
             {
@@ -208,30 +177,29 @@ public:
                 cell_t curCell = population.at(cellNum);
                 for (int i = 0; i < n; i++)
                 {
-                    //printf("Before tumble\n");
-                    //printf("Dir: "); printVector(dir); printf("\n");
-                    //printf("curcell pos: "); printVector(curCell.pos); printf("\n");
-                    //printf("tempcell pos size: %d\n", tempCell.pos.size());
                     tempCell.pos.push_back( curCell.pos.at(i) + STEP_SIZE * dir.at(i) );
-                    //printf("After tumble\n");
 
                     if (tempCell.pos.at(i) > MAX_X) tempCell.pos.at(i) = MAX_X;
                     if (tempCell.pos.at(i) < MIN_X) tempCell.pos.at(i) = MIN_X;
 
                 }
 
-                tempCell.fitness = evalFitness(tempCell.pos) + cellInteraction(tempCell, ATTRACT_D, ATTRACT_W, REPEL_H, REPEL_W);
+                tempCell.fitness = evalFitness(&tempCell.pos[0], DIMENSION) + cellInteraction(tempCell, ATTRACT_D, ATTRACT_W, REPEL_H, REPEL_W);
+
                 /* Exit if we didn't find a better solution? 
                  * because we're MAXIMIZING a problem less is worse*/
-                //if (tempCell.fitness > population.at(cellNum).fitness) {
-                if (tempCell.fitness < population.at(cellNum).fitness) {
+                /* If trying to minimize, return if fitness is GREATER (worse) else if LESS than */
+                if (isMin ? tempCell.fitness > population.at(cellNum).fitness : tempCell.fitness < population.at(cellNum).fitness) {
                     stepNum = CHEMO_STEPS;
                 }
                 else {
                     /* Otherwise the cell = the new cell, and add to the
                     * overall health of the cell */
                     population.at(cellNum) = tempCell;
-                    population.at(cellNum).health += tempCell.fitness;
+
+                    /* If trying to minimize then we want to SUBTRACT fitness from health since
+                     * we want a low fitness, else we want a high fitness for higher score */
+                    population.at(cellNum).health += isMin ? -1.0  * tempCell.fitness : tempCell.fitness;
                 }
             }
 
@@ -263,4 +231,86 @@ public:
             population.at(i + (population.size()/2)) = population.at(i);
         }
     }
+
+    /* n is the number of dimensions */
+    /* https://gist.github.com/x0xMaximus/8626921 */
+    void bacterialOptimization(int n, const bool isMin)
+    {
+        cell_t best; // best cell;
+        best.fitness = -9999;
+
+        /* Generate the initial population */
+        for (int i = 0; i < POP_SIZE; i++)
+        {
+            population.at(i).pos = genRandSol(n);
+            population.at(i).fitness = 0.0;
+            population.at(i).health = 0.0;
+        }
+
+        /* Elimination/Dispersal Events */
+        for (int l = 0; l < ELDISP_STEPS; l++)
+        {
+            for (int k = 0; k < REPRO_STEPS; k++)
+            {
+                for (int j = 0; j < CHEMO_STEPS; j++)
+                {
+                    /* Swim about */
+                    chemotaxisAndSwim(n, STEP_SIZE, ELDISP_STEPS, REPRO_STEPS,
+                        CHEMO_STEPS, SWIM_LEN, ELIM_PROB, ATTRACT_D, ATTRACT_W, REPEL_H,
+                        REPEL_W, isMin);
+
+                    /* Check for a new best */
+                    for (cell_t cell : population)
+                    {
+                        /* -9999 for the initial cell */
+                        //if (best.fitness == -9999 || cell.fitness >= best.fitness)
+                        if (isMin ? cell.fitness < best.fitness : cell.fitness > best.fitness)
+                        {
+                            best = cell;
+                            //printf("New Best: "); printVector(best.pos); printf("\n");
+                            //printf("Fitness: %f\n", evalFitness(best.pos));
+                        }
+                    }
+                } // end CHEMO_STEPS
+
+                // elimination step
+                eliminatePop();
+            } // end REPRO_STEPS
+
+            /* Randomly replace a cell at a new location */
+            const double MAXPROB = 1.0;
+            for (int cellNum = 0; cellNum < population.size(); cellNum++)
+            {
+                double num = (double)rand() / ((double)RAND_MAX / (MAXPROB));
+                if (num < ELIM_PROB) {
+                    population.at(cellNum).pos = genRandSol(n);
+                    population.at(cellNum).health = 0.0;
+                    population.at(cellNum).fitness = evalFitness(&population.at(cellNum).pos[0], DIMENSION);
+                }
+            }
+        } // end ELDISP steps
+
+        
+
+        printf("Best: "); printVector(best.pos); printf("\n");
+        printf("Fitness: %f\n", evalFitness(&best.pos[0], DIMENSION));
+    }
+/*
+    int function(int argc, char *argv[])
+    {
+        srand(time(0));
+
+    	std::vector<int> dims = {1, 2, 3, 5, 8, 13};
+    	
+    	for(int x : dims)
+    	{
+    		printf("N = %d\n--------------\n", x);
+    		bacterialOptimization(x);
+    		printf("\n");
+    	}
+    	
+        
+
+        return 0;
+    }*/
 };

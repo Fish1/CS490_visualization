@@ -1,6 +1,11 @@
 #include "ofApp.h"
 
+#define MINIMUM -8
+#define MAXIMUM 8
+
+#ifndef DIMENSION
 #define DIMENSION 2
+#endif
 
 unsigned frame_cnt = 0;
 
@@ -23,6 +28,21 @@ double ofApp::function(double * coords, unsigned int dim)
 	return result;
 }
 
+// other test fitness function
+// this function expects dim to be 2 anyways...
+// townsend function:
+// https://en.wikipedia.org/wiki/Test_functions_for_optimization
+double ofApp::function2(double * coords, unsigned int dim)
+{
+	double x = coords[0];
+	double y = coords[1];
+	double cosVal = -1.0 * pow(cos((x - 0.1)*y), 2.0);
+	
+	double sinVal = x*sin(3*x+y);
+	
+	return cosVal - sinVal;
+}
+
 void ofApp::setup()
 {
 	ofEnableDepthTest();
@@ -37,6 +57,109 @@ void ofApp::setup()
 	const float width = 0.5f;
 	//random number generator
 	domain = std::uniform_real_distribution<double>(visual.MIN_X, visual.MAX_X);
+
+	// set our current fitness function pointer and array of funcs
+	fitnessFuncs[0] = { function, false };
+	fitnessFuncs[1] = { function2, true };
+	fitnessFuncIndex = 0;
+	
+	// set the fitness function in the bacteria instance
+	visual.evalFitness = fitnessFuncs[fitnessFuncIndex].fitnessFunc;
+
+#if 0
+	// Create Verticies
+	for(int z = 0; z < checks; ++z)
+	{
+		// the z position of the current vertex
+		double currentZ = ((double)z / (double)perUnit) - ((double)size / 2.0);
+
+		for(int x = 0; x < checks; ++x)
+		{
+			// the x position of the current vertex
+			double currentX = ((double)x / (double)perUnit) - ((double)size / 2.0);
+
+			// pass in these coordinates to the fitness function to get the y position
+			double coord [] = {currentX, currentZ};
+
+			// the y position of the current vertex
+			//double currentY = function(coord, 2);
+			double currentY = fitnessFuncs[fitnessFuncIndex].fitnessFunc(coord, 2);
+			
+			ofVec3f point(currentX, currentY, currentZ);
+			mesh.addVertex(point);
+		}
+	}
+
+	// Create indices
+
+	for(unsigned int y = 0; y < checks - 1; ++y)
+	{
+		for(unsigned int x = 0; x < checks; ++x)
+		{
+			unsigned int current = x + checks * y;
+			unsigned int below = x + checks * (y + 1);
+			unsigned int left = (x - 1) + checks * y;
+			unsigned int belowRight = (x + 1) + checks * (y + 1);
+
+			if(x == 0)
+			{
+				mesh.addIndex(current);
+				mesh.addIndex(below);
+				mesh.addIndex(belowRight);	
+			}
+			else if(x == checks - 1)
+			{
+				mesh.addIndex(current);
+				mesh.addIndex(left);
+				mesh.addIndex(below);
+			}
+			else
+			{
+				mesh.addIndex(current);
+				mesh.addIndex(below);
+				mesh.addIndex(belowRight);
+				
+				mesh.addIndex(current);
+				mesh.addIndex(left);
+				mesh.addIndex(below);
+			}
+		}
+	}
+#endif
+
+    // initialize the mesh
+    initializeMesh();
+
+	//create spheres
+	sphere.setRadius(width);
+
+
+	best.fitness = -9999;
+
+
+
+	// Initialize the camera closer to our graph
+	cam.setTarget(glm::vec3(0.0f,-5.0f,0.0f));
+	cam.setDistance(20.0f);
+	//ofSetColor(255,255,0);
+}
+
+void ofApp::initializeMesh()
+{
+
+	// size is from -8 to 8
+	const int size = 16;
+	// how many vertices per 1 unit
+	const int perUnit = 5;
+	// square root of the number of vertices
+	const int checks = perUnit * size;
+	//size of spheres **bacteria
+	const float width = 0.5f;
+	//random number generator
+	domain = std::uniform_real_distribution<double>(visual.MIN_X, visual.MAX_X);
+
+    // clear dah mesh
+    mesh.clear();
 
 	// Create Verticies
 	for(int z = 0; z < checks; ++z)
@@ -53,7 +176,8 @@ void ofApp::setup()
 			double coord [] = {currentX, currentZ};
 
 			// the y position of the current vertex
-			double currentY = function(coord, 2);
+			//double currentY = function(coord, 2);
+			double currentY = fitnessFuncs[fitnessFuncIndex].fitnessFunc(coord, 2);
 			
 			ofVec3f point(currentX, currentY, currentZ);
 			mesh.addVertex(point);
@@ -96,18 +220,6 @@ void ofApp::setup()
 		}
 	}
 
-	//create spheres
-	sphere.setRadius(width);
-
-
-	best.fitness = -9999;
-
-
-
-	// Initialize the camera closer to our graph
-	cam.setTarget(glm::vec3(0.0f,-5.0f,0.0f));
-	cam.setDistance(20.0f);
-	//ofSetColor(255,255,0);
 }
 
 //--------------------------------------------------------------
@@ -124,18 +236,19 @@ void ofApp::update()
 								visual.ATTRACT_D, 
 								visual.ATTRACT_W, 
 								visual.REPEL_H, 
-								visual.REPEL_W);
+								visual.REPEL_W,
+                                fitnessFuncs[fitnessFuncIndex].isMin);
 
     /* Check for a new best */
     for (cell_t cell : visual.population)
 	{
-		if (cell.fitness > best.fitness)
+		if (fitnessFuncs[fitnessFuncIndex].isMin ? cell.fitness < best.fitness : cell.fitness > best.fitness)
 		{
             best = cell;
 
 			printf("Best: "); 
 			visual.printVector(best.pos); printf("\n");
-			printf("Fitness: %f\n", visual.evalFitness(best.pos));
+			printf("Fitness: %f\n", visual.evalFitness(&best.pos[0], DIMENSION));
 		}
 	}
 
@@ -151,7 +264,7 @@ void ofApp::update()
 			{
 				visual.population.at(cellNum).pos = visual.genRandSol(DIMENSION);
 				visual.population.at(cellNum).health = 0.0;
-				visual.population.at(cellNum).fitness = visual.evalFitness(visual.population.at(cellNum).pos);
+				visual.population.at(cellNum).fitness = visual.evalFitness(&visual.population.at(cellNum).pos[0], DIMENSION);
 			}
 		}
 
@@ -196,10 +309,7 @@ void ofApp::draw(){
 
 	for(int i=0;i<visual.population.size();i++)
     {
-    	ofDrawSphere(	glm::vec3(visual.population.at(i).pos[0],
-    					ofApp::function(&visual.population.at(i).pos[0], DIMENSION),
-    					visual.population.at(i).pos[1]), 0.2
-    				);
+    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], fitnessFuncs[fitnessFuncIndex].fitnessFunc(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
     }
 
 	cam.end();
@@ -298,6 +408,20 @@ void ofApp::keyPressed(int key){
 
 		std::cout << "REPEL_W = " << visual.REPEL_W << std::endl;
 	}
+
+    if(key == '1')
+    {
+        fitnessFuncIndex = 0;
+        initializeMesh();
+        visual.initializePopulation();
+    }
+
+    if(key == '2')
+    {
+        fitnessFuncIndex = 1;
+        initializeMesh();
+        visual.initializePopulation();
+    }
 }
 
 //--------------------------------------------------------------
