@@ -21,23 +21,48 @@ class cell_t
 class bacteria
 {
 public:
-    const int MIN_X = -8.0;
-    const int MAX_X = 8.0;
+    int MIN_X = -8.0;
+    int MAX_X = 8.0;
     //Original cpp file values
-    const int    POP_SIZE = 20;       // population size - book uses 50
-    const double STEP_SIZE = 0.1;     // Same as book
-    const int    ELDISP_STEPS = 5;    // elimination/dispersal events
-    const int    REPRO_STEPS = 4;     // reproduction steps
-    const int    CHEMO_STEPS = 350;    // chemotaxis/swim events - set as 7*ELDISP_STEPS
-    const int    SWIM_LEN = 4;        // how long to swim?
-    const double ELIM_PROB = 0.25;    // Probability of elimination
-    const double ATTRACT_D = 0.1;       // attraction coefficient
-    const double ATTRACT_W = 0.2;     // attraction weight?
-    const double REPEL_H = 0.1;       // repel coefficient
-    const double REPEL_W = 10.0;      // repel weight
+    int    POP_SIZE = 20;       // population size - book uses 50
+    double STEP_SIZE = 0.1;     // Same as book
+    int    ELDISP_STEPS = 5;    // elimination/dispersal events
+    int    REPRO_STEPS = 4;     // reproduction steps
+    int    CHEMO_STEPS = 350;    // chemotaxis/swim events - set as 7*ELDISP_STEPS
+    int    SWIM_LEN = 4;        // how long to swim?
+    double ELIM_PROB = 0.25;    // Probability of elimination
+    double ATTRACT_D = 0.1;       // attraction coefficient
+    double ATTRACT_W = 0.2;     // attraction weight?
+    double REPEL_H = 0.1;       // repel coefficient
+    double REPEL_W = 10.0;      // repel weight
     std::vector<cell_t>  population;
 
-    bacteria():population(POP_SIZE) {};
+	const int DIMENSION;
+
+	bacteria() :
+		DIMENSION(2)
+	{
+		initializePopulation();	
+	}
+
+    bacteria(int dim) : 
+		DIMENSION(dim)
+	{
+		initializePopulation();	
+	}
+
+	void initializePopulation()
+	{
+			population = std::vector<cell_t>(POP_SIZE);
+
+			/* Generate the initial population */
+			for (int i = 0; i < POP_SIZE; i++)
+			{
+				population.at(i).pos = genRandSol(DIMENSION);
+				population.at(i).fitness = 0.0;
+				population.at(i).health = 0.0;
+			}
+	}
 
     /* The cell interaction equation `g()` as described by the
      * clever algorithms textbook */
