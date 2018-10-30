@@ -163,7 +163,7 @@ void ofApp::update()
 
 			printf("Best: "); 
 			visual.printVector(best.pos); printf("\n");
-			printf("Fitness: %f\n", visual.evalFitness(best.pos));
+			printf("Fitness: %f\n", visual.evalFitness(&best.pos[0], DIMENSION));
 		}
 	}
 

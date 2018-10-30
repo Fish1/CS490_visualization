@@ -6,9 +6,9 @@
 #include <random>
 #include <algorithm>
 
-#ifndef DIMENSION
-#define DIMENSION 2
-#endif
+//#ifndef DIMENSION
+//#define DIMENSION 2
+//#endif
 
 class cell_t
     {
