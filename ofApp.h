@@ -10,6 +10,11 @@
 // function pointer to an evaluation function
 //typedef double (ofApp:: eval_func_t)(double *, unsigned int);
 
+typedef struct {
+    std::function<double(double *, unsigned int)> fitnessFunc; // the actual evaluation function
+    bool isMin;                                                // whether or not we're trying to minimize or maximize
+} probFunc;
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -43,6 +48,6 @@ class ofApp : public ofBaseApp{
 		static double function2(double * coords, unsigned int dim);
 		
 		const static unsigned int numFitnessFuncs = 2;
-		std::function<double(double *, unsigned int)> fitnessFuncs[numFitnessFuncs];
+		probFunc fitnessFuncs[numFitnessFuncs];
 		unsigned int fitnessFuncIndex = 0;
 };

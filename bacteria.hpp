@@ -86,49 +86,8 @@ public:
 
         return sumAttract + sumRepel;
     }
-
     
 
-#if 0
-    double evalFitness(std::vector<double> v)
-    {
-        double sr = 0.0; // square root
-        double sn = 0.0; // sin
-        for (int i = 0; i < v.size(); i++)
-        {
-            /*****************************************/
-            /**             Square Root             **/
-            /*****************************************/
-            // x sub i
-            double a = v.at(i);
-
-            // (-1)^i (i % 4)
-            // i+1 because formula states from i=1..N,
-            // here i starts at 0
-            a += pow(-1, i+1) * ((i+1) % 4);
-
-            // sum to our current total, squared
-            sr += pow(a, 2);
-
-            /*****************************************/
-            /**                 Sin                 **/
-            /*****************************************/
-            // x sub i
-            a = v.at(i);
-
-            // add to running total (x sub i) ^ i
-            sn += pow(a, i+1);
-        }
-
-        // square root
-        sr = sqrt(sr);
-        // the square root is negated
-        sr *= -1.0;
-
-        // final value is sqrt(sum1) + sin(sum2)
-        return sr + sin(sn);
-    }
-#endif
 	std::function<double(double *, unsigned int)> evalFitness;
 
     void printVector(std::vector<double> v)
@@ -181,16 +140,17 @@ public:
 
     void chemotaxisAndSwim(
         int n,
-        const double STEP_SIZE,     // Same as book
-        const int    ELDISP_STEPS,    // elimination/dispersal events
-        const int    REPRO_STEPS,     // reproduction steps
-        const int    CHEMO_STEPS,    // chemotaxis/swim events
-        const int    SWIM_LEN,        // how long to swim?
+        const double STEP_SIZE,    // Same as book
+        const int    ELDISP_STEPS, // elimination/dispersal events
+        const int    REPRO_STEPS,  // reproduction steps
+        const int    CHEMO_STEPS,  // chemotaxis/swim events
+        const int    SWIM_LEN,     // how long to swim?
         const double ELIM_PROB,    // Probability of elimination
-        const double ATTRACT_D,       // attraction coefficient
-        const double ATTRACT_W,     // attraction weight?
-        const double REPEL_H,       // repel coefficient
-        const double REPEL_W      // repel weight 
+        const double ATTRACT_D,    // attraction coefficient
+        const double ATTRACT_W,    // attraction weight?
+        const double REPEL_H,      // repel coefficient
+        const double REPEL_W,      // repel weight 
+        const bool   isMin         // whether or not we're trying to minimize the function
     )
     {
         //printf("Population size: %d\n", population.size());
@@ -217,12 +177,7 @@ public:
                 cell_t curCell = population.at(cellNum);
                 for (int i = 0; i < n; i++)
                 {
-                    //printf("Before tumble\n");
-                    //printf("Dir: "); printVector(dir); printf("\n");
-                    //printf("curcell pos: "); printVector(curCell.pos); printf("\n");
-                    //printf("tempcell pos size: %d\n", tempCell.pos.size());
                     tempCell.pos.push_back( curCell.pos.at(i) + STEP_SIZE * dir.at(i) );
-                    //printf("After tumble\n");
 
                     if (tempCell.pos.at(i) > MAX_X) tempCell.pos.at(i) = MAX_X;
                     if (tempCell.pos.at(i) < MIN_X) tempCell.pos.at(i) = MIN_X;
@@ -230,17 +185,21 @@ public:
                 }
 
                 tempCell.fitness = evalFitness(&tempCell.pos[0], DIMENSION) + cellInteraction(tempCell, ATTRACT_D, ATTRACT_W, REPEL_H, REPEL_W);
+
                 /* Exit if we didn't find a better solution? 
                  * because we're MAXIMIZING a problem less is worse*/
-                //if (tempCell.fitness > population.at(cellNum).fitness) {
-                if (tempCell.fitness < population.at(cellNum).fitness) {
+                /* If trying to minimize, return if fitness is GREATER (worse) else if LESS than */
+                if (isMin ? tempCell.fitness > population.at(cellNum).fitness : tempCell.fitness < population.at(cellNum).fitness) {
                     stepNum = CHEMO_STEPS;
                 }
                 else {
                     /* Otherwise the cell = the new cell, and add to the
                     * overall health of the cell */
                     population.at(cellNum) = tempCell;
-                    population.at(cellNum).health += tempCell.fitness;
+
+                    /* If trying to minimize then we want to SUBTRACT fitness from health since
+                     * we want a low fitness, else we want a high fitness for higher score */
+                    population.at(cellNum).health += isMin ? -1.0  * tempCell.fitness : tempCell.fitness;
                 }
             }
 
@@ -275,24 +234,18 @@ public:
 
     /* n is the number of dimensions */
     /* https://gist.github.com/x0xMaximus/8626921 */
-    void bacterialOptimization(int n)
+    void bacterialOptimization(int n, const bool isMin)
     {
-        //std::vector<cell_t> population(POP_SIZE);
-
         cell_t best; // best cell;
         best.fitness = -9999;
 
         /* Generate the initial population */
-        //printf("Initial pop:\n");
         for (int i = 0; i < POP_SIZE; i++)
         {
             population.at(i).pos = genRandSol(n);
             population.at(i).fitness = 0.0;
             population.at(i).health = 0.0;
-        //    printVector(population.at(i).pos);
-        //    printf("\n");
         }
-        //printf("\n");
 
         /* Elimination/Dispersal Events */
         for (int l = 0; l < ELDISP_STEPS; l++)
@@ -304,14 +257,14 @@ public:
                     /* Swim about */
                     chemotaxisAndSwim(n, STEP_SIZE, ELDISP_STEPS, REPRO_STEPS,
                         CHEMO_STEPS, SWIM_LEN, ELIM_PROB, ATTRACT_D, ATTRACT_W, REPEL_H,
-                        REPEL_W);
+                        REPEL_W, isMin);
 
                     /* Check for a new best */
                     for (cell_t cell : population)
                     {
                         /* -9999 for the initial cell */
                         //if (best.fitness == -9999 || cell.fitness >= best.fitness)
-                        if (cell.fitness > best.fitness)
+                        if (isMin ? cell.fitness < best.fitness : cell.fitness > best.fitness)
                         {
                             best = cell;
                             //printf("New Best: "); printVector(best.pos); printf("\n");

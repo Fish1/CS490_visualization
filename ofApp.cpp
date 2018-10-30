@@ -59,12 +59,12 @@ void ofApp::setup()
 	domain = std::uniform_real_distribution<double>(visual.MIN_X, visual.MAX_X);
 
 	// set our current fitness function pointer and array of funcs
-	fitnessFuncs[0] = function;
-	fitnessFuncs[1] = function2;
-	fitnessFuncIndex = 1;
+	fitnessFuncs[0] = { function, false };
+	fitnessFuncs[1] = { function2, true };
+	fitnessFuncIndex = 0;
 	
 	// set the fitness function in the bacteria instance
-	visual.evalFitness = fitnessFuncs[fitnessFuncIndex];
+	visual.evalFitness = fitnessFuncs[fitnessFuncIndex].fitnessFunc;
 
 	// Create Verticies
 	for(int z = 0; z < checks; ++z)
@@ -82,7 +82,7 @@ void ofApp::setup()
 
 			// the y position of the current vertex
 			//double currentY = function(coord, 2);
-			double currentY = fitnessFuncs[fitnessFuncIndex](coord, 2);
+			double currentY = fitnessFuncs[fitnessFuncIndex].fitnessFunc(coord, 2);
 			
 			ofVec3f point(currentX, currentY, currentZ);
 			mesh.addVertex(point);
@@ -152,12 +152,13 @@ void ofApp::update()
 								visual.ATTRACT_D, 
 								visual.ATTRACT_W, 
 								visual.REPEL_H, 
-								visual.REPEL_W);
+								visual.REPEL_W,
+                                fitnessFuncs[fitnessFuncIndex].isMin);
 
     /* Check for a new best */
     for (cell_t cell : visual.population)
 	{
-		if (cell.fitness > best.fitness)
+		if (fitnessFuncs[fitnessFuncIndex].isMin ? cell.fitness < best.fitness : cell.fitness > best.fitness)
 		{
             best = cell;
 
@@ -207,7 +208,7 @@ void ofApp::draw(){
 
 	for(int i=0;i<visual.population.size();i++)
     {
-    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], fitnessFuncs[fitnessFuncIndex](&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
+    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], fitnessFuncs[fitnessFuncIndex].fitnessFunc(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
     }
 
 	cam.end();
