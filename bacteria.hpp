@@ -21,8 +21,8 @@ class cell_t
 class bacteria
 {
 public:
-    int MIN_X = -8.0;
-    int MAX_X = 8.0;
+    int MIN_X = -2.0;
+    int MAX_X = 2.0;
     //Original cpp file values
     int    POP_SIZE = 20;       // population size - book uses 50
     double STEP_SIZE = 0.1;     // Same as book

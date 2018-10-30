@@ -1,7 +1,7 @@
 #include "ofApp.h"
 
-#define MINIMUM -8
-#define MAXIMUM 8
+#define MINIMUM -2
+#define MAXIMUM 2
 
 #ifndef DIMENSION
 #define DIMENSION 2
@@ -54,7 +54,7 @@ void ofApp::setup()
 	// square root of the number of vertices
 	const int checks = perUnit * size;
 	//size of spheres **bacteria
-	const float width = 0.5f;
+	const float width = 0.125f;
 	//random number generator
 	domain = std::uniform_real_distribution<double>(visual.MIN_X, visual.MAX_X);
 
@@ -148,7 +148,7 @@ void ofApp::initializeMesh()
 {
 
 	// size is from -8 to 8
-	const int size = 16;
+	const int size = 4;
 	// how many vertices per 1 unit
 	const int perUnit = 5;
 	// square root of the number of vertices
@@ -289,7 +289,7 @@ void ofApp::draw(){
 	cam.begin();
 
 	mesh.enableColors();
-	ofSetColor(255,255,255);
+	ofSetColor(100,100,100);
 	mesh.drawWireframe();
 	mesh.disableColors();
 
@@ -309,7 +309,7 @@ void ofApp::draw(){
 
 	for(int i=0;i<visual.population.size();i++)
     {
-    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], fitnessFuncs[fitnessFuncIndex].fitnessFunc(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
+    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], fitnessFuncs[fitnessFuncIndex].fitnessFunc(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.125);
     }
 
 	cam.end();
