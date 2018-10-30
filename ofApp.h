@@ -43,6 +43,8 @@ class ofApp : public ofBaseApp{
 		std::default_random_engine gen;
 		std::uniform_real_distribution<double> domain;
 
+        void initializeMesh();
+
 	private:
 		static double function(double * coords, unsigned int dim);
 		static double function2(double * coords, unsigned int dim);
