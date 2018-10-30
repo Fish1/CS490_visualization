@@ -312,6 +312,8 @@ void ofApp::draw(){
     	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], fitnessFuncs[fitnessFuncIndex].fitnessFunc(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
     }
 
+    ofSleepMillis(500);
+
 	cam.end();
 }
 
