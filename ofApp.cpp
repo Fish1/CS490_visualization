@@ -61,7 +61,7 @@ void ofApp::setup()
 	// set our current fitness function pointer and array of funcs
 	fitnessFuncs[0] = { function, false };
 	fitnessFuncs[1] = { function2, true };
-	fitnessFuncIndex = 0;
+	fitnessFuncIndex = 1;
 	
 	// set the fitness function in the bacteria instance
 	visual.evalFitness = fitnessFuncs[fitnessFuncIndex].fitnessFunc;
@@ -139,8 +139,8 @@ void ofApp::setup()
 
 
 	// Initialize the camera closer to our graph
-	cam.setTarget(glm::vec3(0.0f,-5.0f,0.0f));
-	cam.setDistance(20.0f);
+	cam.setTarget(glm::vec3(0.0f,0.0f,0.0f));
+	cam.setDistance(15.0f);
 	//ofSetColor(255,255,0);
 }
 
@@ -309,7 +309,7 @@ void ofApp::draw(){
 
 	for(int i=0;i<visual.population.size();i++)
     {
-    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], fitnessFuncs[fitnessFuncIndex].fitnessFunc(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.125);
+    	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], fitnessFuncs[fitnessFuncIndex].fitnessFunc(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.1);
     }
 
 	cam.end();

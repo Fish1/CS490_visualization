@@ -24,7 +24,7 @@ public:
     int MIN_X = -2.0;
     int MAX_X = 2.0;
     //Original cpp file values
-    int    POP_SIZE = 20;       // population size - book uses 50
+    int    POP_SIZE = 100;       // population size - book uses 50
     double STEP_SIZE = 0.1;     // Same as book
     int    ELDISP_STEPS = 5;    // elimination/dispersal events
     int    REPRO_STEPS = 4;     // reproduction steps
