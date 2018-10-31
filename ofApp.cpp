@@ -45,6 +45,8 @@ double ofApp::function2(double * coords, unsigned int dim)
 
 void ofApp::setup()
 {
+	srand(time(0));
+
 	ofEnableDepthTest();
 
 	// size is from -8 to 8
