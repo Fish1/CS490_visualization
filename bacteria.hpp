@@ -28,7 +28,7 @@ public:
     double STEP_SIZE = 0.1;     // Same as book
     int    ELDISP_STEPS = 5;    // elimination/dispersal events
     int    REPRO_STEPS = 4;     // reproduction steps
-    int    CHEMO_STEPS = 350;    // chemotaxis/swim events - set as 7*ELDISP_STEPS
+    int    CHEMO_STEPS = 150;    // chemotaxis/swim events - set as 7*ELDISP_STEPS
     int    SWIM_LEN = 4;        // how long to swim?
     double ELIM_PROB = 0.25;    // Probability of elimination
     double ATTRACT_D = 0.1;       // attraction coefficient
