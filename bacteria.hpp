@@ -300,7 +300,6 @@ public:
 /*
     int function(int argc, char *argv[])
     {
-        srand(time(0));
 
     	std::vector<int> dims = {1, 2, 3, 5, 8, 13};
     	
