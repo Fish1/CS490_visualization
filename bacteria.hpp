@@ -37,6 +37,8 @@ public:
     double REPEL_W = 10.0;      // repel weight
     std::vector<cell_t>  population;
 
+    bool imageLoad = false;
+
 	const int DIMENSION;
 
 	bacteria() :

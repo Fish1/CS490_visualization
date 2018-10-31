@@ -52,4 +52,6 @@ class ofApp : public ofBaseApp{
 		const static unsigned int numFitnessFuncs = 2;
 		probFunc fitnessFuncs[numFitnessFuncs];
 		unsigned int fitnessFuncIndex = 0;
+
+		ofImage bacteriaImage;
 };

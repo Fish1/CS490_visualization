@@ -66,67 +66,6 @@ void ofApp::setup()
 	// set the fitness function in the bacteria instance
 	visual.evalFitness = fitnessFuncs[fitnessFuncIndex].fitnessFunc;
 
-#if 0
-	// Create Verticies
-	for(int z = 0; z < checks; ++z)
-	{
-		// the z position of the current vertex
-		double currentZ = ((double)z / (double)perUnit) - ((double)size / 2.0);
-
-		for(int x = 0; x < checks; ++x)
-		{
-			// the x position of the current vertex
-			double currentX = ((double)x / (double)perUnit) - ((double)size / 2.0);
-
-			// pass in these coordinates to the fitness function to get the y position
-			double coord [] = {currentX, currentZ};
-
-			// the y position of the current vertex
-			//double currentY = function(coord, 2);
-			double currentY = fitnessFuncs[fitnessFuncIndex].fitnessFunc(coord, 2);
-			
-			ofVec3f point(currentX, currentY, currentZ);
-			mesh.addVertex(point);
-		}
-	}
-
-	// Create indices
-
-	for(unsigned int y = 0; y < checks - 1; ++y)
-	{
-		for(unsigned int x = 0; x < checks; ++x)
-		{
-			unsigned int current = x + checks * y;
-			unsigned int below = x + checks * (y + 1);
-			unsigned int left = (x - 1) + checks * y;
-			unsigned int belowRight = (x + 1) + checks * (y + 1);
-
-			if(x == 0)
-			{
-				mesh.addIndex(current);
-				mesh.addIndex(below);
-				mesh.addIndex(belowRight);	
-			}
-			else if(x == checks - 1)
-			{
-				mesh.addIndex(current);
-				mesh.addIndex(left);
-				mesh.addIndex(below);
-			}
-			else
-			{
-				mesh.addIndex(current);
-				mesh.addIndex(below);
-				mesh.addIndex(belowRight);
-				
-				mesh.addIndex(current);
-				mesh.addIndex(left);
-				mesh.addIndex(below);
-			}
-		}
-	}
-#endif
-
     // initialize the mesh
     initializeMesh();
 
@@ -136,12 +75,13 @@ void ofApp::setup()
 
 	best.fitness = -9999;
 
-
-
 	// Initialize the camera closer to our graph
 	cam.setTarget(glm::vec3(0.0f,0.0f,0.0f));
 	cam.setDistance(15.0f);
 	//ofSetColor(255,255,0);
+
+
+	bacteriaImage.load("images/bacteria.png");
 }
 
 void ofApp::initializeMesh()
@@ -225,6 +165,7 @@ void ofApp::initializeMesh()
 //--------------------------------------------------------------
 void ofApp::update()
 {
+    
     /* Swim about */
 	visual.chemotaxisAndSwim(	DIMENSION, 
 								visual.STEP_SIZE, 
@@ -267,8 +208,6 @@ void ofApp::update()
 				visual.population.at(cellNum).fitness = visual.evalFitness(&visual.population.at(cellNum).pos[0], DIMENSION);
 			}
 		}
-
-
 	}
 
 	/*Kills bacteria with low health*/
@@ -284,12 +223,17 @@ void ofApp::draw(){
 	static int green = 255;
 
 	frame_cnt++;
-	ofBackgroundGradient(ofColor(65,62,50), ofColor(25,22,10));	
+
+
+	if(visual.imageLoad)
+		bacteriaImage.draw(0, 0, 1080, 640);
+	else
+		ofBackgroundGradient(ofColor(65,62,50), ofColor(25,22,10));
 
 	cam.begin();
 
 	mesh.enableColors();
-	ofSetColor(100,100,100);
+	ofSetColor(200,200,200);
 	mesh.drawWireframe();
 	mesh.disableColors();
 
@@ -422,6 +366,13 @@ void ofApp::keyPressed(int key){
         initializeMesh();
         visual.initializePopulation();
     }
+
+    if(key == 'b')
+    {
+    	visual.imageLoad = !visual.imageLoad;
+        initializeMesh();
+    }
+
 }
 
 //--------------------------------------------------------------
