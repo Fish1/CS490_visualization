@@ -144,6 +144,7 @@ void ofApp::setup()
 	cam.setTarget(glm::vec3(0.0f,-5.0f,0.0f));
 	cam.setDistance(20.0f);
 	//ofSetColor(255,255,0);
+	ofSetFrameRate(25);
 }
 
 void ofApp::initializeMesh()
@@ -313,6 +314,8 @@ void ofApp::draw(){
     {
     	ofDrawSphere(glm::vec3(visual.population.at(i).pos[0], fitnessFuncs[fitnessFuncIndex].fitnessFunc(&visual.population.at(i).pos[0], DIMENSION), visual.population.at(i).pos[1]), 0.4);
     }
+
+    //ofSleepMillis(500);
 
 	cam.end();
 }
