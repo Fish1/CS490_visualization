@@ -289,7 +289,7 @@ void ofApp::draw(){
 	cam.begin();
 
 	mesh.enableColors();
-	ofSetColor(255,255,255);
+	ofSetColor(100,100,100);
 	mesh.drawWireframe();
 	mesh.disableColors();
 
